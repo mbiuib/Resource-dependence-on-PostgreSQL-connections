@@ -2,6 +2,7 @@ import threading
 import time
 from datetime import datetime
 
+import keyboard
 import psutil
 from matplotlib import pyplot as plt
 
@@ -52,11 +53,17 @@ disk_usage_data = []
 threads = []
 
 
-def thread_start():
-    t1 = threading.Thread(target=select_stmnt, args=(request,))
-    t1.start()
+def new_thread():
     global current_threads
     current_threads += 1
+    select_stmnt(request)
+    current_threads -= 1
+    print("quit thread\n\n")
+
+
+def thread_start():
+    t1 = threading.Thread(target=new_thread)
+    t1.start()
 
 
 # Функция для обновления данных
