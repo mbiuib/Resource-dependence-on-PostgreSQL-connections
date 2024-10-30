@@ -149,7 +149,7 @@ while True:
 
     # График потоков
     ax[3].plot(timestamps, threads, color="red", label="Request count")
-    ax[3].set_ylim(0, THREADS_COUNT * 2)
+    ax[3].set_ylim(0, current_threads * 2 - current_threads*0.5)
     ax[3].set_ylabel("Request count")
     ax[3].legend(loc="upper right")
 
