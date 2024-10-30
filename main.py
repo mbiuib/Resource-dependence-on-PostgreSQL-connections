@@ -1,8 +1,8 @@
 import threading
 import time
 from datetime import datetime
+import tkinter as tk
 
-import keyboard
 import psutil
 from matplotlib import pyplot as plt
 
@@ -53,7 +53,7 @@ disk_usage_data = []
 threads = []
 
 
-def new_thread():
+def thread_start():
     global current_threads
     current_threads += 1
     select_stmnt(request)
@@ -61,12 +61,32 @@ def new_thread():
     print("quit thread\n\n")
 
 
-def thread_start():
-    t1 = threading.Thread(target=new_thread)
+def new_thread():
+    t1 = threading.Thread(target=thread_start)
     t1.start()
 
 
-# Функция для обновления данных
+class Main(threading.Thread):
+    def __init__(self):
+        super().__init__()
+
+    def run(self):
+        def on_button_click():
+            new_thread()
+
+        # Создаем главное окно приложения
+        root = tk.Tk()
+        root.title("Кнопка для запуска функции")
+        root.geometry("100x100")
+
+        # Создаем кнопку и привязываем ее к функции on_button_click
+        button = tk.Button(root, text="Нажми меня", command=on_button_click)
+        button.pack(pady=20)
+
+        # Запуск главного цикла обработки событий
+        root.mainloop()
+
+
 def update_data():
     # Добавляем метку времени
     timestamps.append(datetime.now().strftime("%H:%M:%S"))
@@ -91,13 +111,16 @@ def update_data():
         threads.pop(0)
 
 
+m = Main()
+m.start()
+
+for i in range(THREADS_COUNT):
+    new_thread()
+
 # Настройка графика
 plt.ion()  # Включаем интерактивный режим
 fig, ax = plt.subplots(4, 1, figsize=(10, 8))
 fig.suptitle("Мониторинг ресурсов системы")
-
-for i in range(THREADS_COUNT):
-    thread_start()
 
 while True:
     update_data()
@@ -126,7 +149,7 @@ while True:
 
     # График потоков
     ax[3].plot(timestamps, threads, color="red", label="Request count")
-    ax[3].set_ylim(0, THREADS_COUNT*2)
+    ax[3].set_ylim(0, THREADS_COUNT * 2)
     ax[3].set_ylabel("Request count")
     ax[3].legend(loc="upper right")
 
@@ -137,5 +160,4 @@ while True:
         a.grid(True)
 
     plt.pause(2)  # Обновляем график каждые 5 секунд
-
     # Выход по Ctrl+C
