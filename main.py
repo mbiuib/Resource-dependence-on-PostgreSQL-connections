@@ -5,6 +5,7 @@ import tkinter as tk
 
 import psutil
 from matplotlib import pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 from database import select_stmnt
 
@@ -41,8 +42,9 @@ LIMIT 1000 OFFSET (SELECT COUNT(*) FROM peoples) / 2;
 # Количество потоков для запроса к БД
 THREADS_COUNT = 4
 # Количество точек для отображения на графике
-POINTS = 20
+POINTS = 40
 
+start_time = time.time()
 current_threads = 0
 
 # Листы для хранения данных
@@ -76,11 +78,11 @@ class Main(threading.Thread):
 
         # Создаем главное окно приложения
         root = tk.Tk()
-        root.title("Кнопка для запуска функции")
+        root.title("Добавление потока")
         root.geometry("100x100")
 
         # Создаем кнопку и привязываем ее к функции on_button_click
-        button = tk.Button(root, text="Нажми меня", command=on_button_click)
+        button = tk.Button(root, text="+1 поток", command=on_button_click)
         button.pack(pady=20)
 
         # Запуск главного цикла обработки событий
@@ -88,8 +90,9 @@ class Main(threading.Thread):
 
 
 def update_data():
-    # Добавляем метку времени
-    timestamps.append(datetime.now().strftime("%H:%M:%S"))
+    # Добавляем метку времени в секундах от начала работы скрипта
+    elapsed_time = time.time() - start_time
+    timestamps.append(int(elapsed_time))
 
     # Собираем данные о ресурсах
     cpu_usage = psutil.cpu_percent(interval=1)
@@ -102,13 +105,12 @@ def update_data():
     disk_usage_data.append(disk_usage)
     threads.append(current_threads)
 
-    # Ограничиваем количество данных до POINTS
-    if len(timestamps) > POINTS:
-        timestamps.pop(0)
-        cpu_usage_data.pop(0)
-        memory_usage_data.pop(0)
-        disk_usage_data.pop(0)
-        threads.pop(0)
+    print(cpu_usage_data)
+    print(memory_usage_data)
+    print(disk_usage_data)
+    print(timestamps)
+    print()
+    print()
 
 
 m = Main()
@@ -153,11 +155,18 @@ while True:
     ax[3].set_ylabel("Request count")
     ax[3].legend(loc="upper right")
 
-    # Форматирование
-    for a in ax:
-        a.set_xticks(range(len(timestamps)))
-        a.set_xticklabels(timestamps, rotation=45)
-        a.grid(True)
+    # Форматирование графиков
+    for i in range(len(ax) - 1):  # Настройка для верхних графиков
+        ax[i].set_xticks(range(len(timestamps)))  # Сетка по X
+        ax[i].xaxis.set_major_locator(MaxNLocator(nbins=10, integer=True))  # Равномерное распределение
+        ax[i].set_xticklabels([])  # Убираем подписи времени
+        ax[i].grid(True)  # Включаем сетку
+
+    # Настройка для нижнего графика
+    ax[3].set_xticks(range(len(timestamps)))
+    ax[3].xaxis.set_major_locator(MaxNLocator(nbins=10, integer=True))  # Равномерное распределение
+    ax[3].set_xlabel("Time (s)")
+    ax[3].grid(True)
 
     plt.pause(2)  # Обновляем график каждые 5 секунд
     # Выход по Ctrl+C
