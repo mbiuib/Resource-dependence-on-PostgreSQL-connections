@@ -2,12 +2,14 @@ import threading
 import time
 from datetime import datetime
 import tkinter as tk
+from random import choice
 
 import psutil
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 from database import select_stmnt
+
 
 request = """
 SELECT 
@@ -29,7 +31,7 @@ LEFT JOIN
 LEFT JOIN 
     snils s ON p.id = s.people_id
 WHERE 
-    p.gender = 'ж'
+    p.gender = '{}'
 ORDER BY 
     p.lastname, p.name
 LIMIT 1000 OFFSET (SELECT COUNT(*) FROM peoples) / 2;
@@ -58,7 +60,7 @@ threads = []
 def thread_start():
     global current_threads
     current_threads += 1
-    select_stmnt(request)
+    select_stmnt(request.format(choice(["м", "ж"])))
     current_threads -= 1
     print("quit thread\n\n")
 
@@ -151,7 +153,7 @@ while True:
 
     # График потоков
     ax[3].plot(timestamps, threads, color="red", label="Request count")
-    ax[3].set_ylim(0, current_threads * 2 - current_threads*0.5)
+    ax[3].set_ylim(0, 16)
     ax[3].set_ylabel("Request count")
     ax[3].legend(loc="upper right")
 
@@ -168,5 +170,5 @@ while True:
     ax[3].set_xlabel("Time (s)")
     ax[3].grid(True)
 
-    plt.pause(2)  # Обновляем график каждые 5 секунд
+    plt.pause(2)  # Обновляем график каждые 2 секунды
     # Выход по Ctrl+C
